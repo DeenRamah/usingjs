@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Translation</title>
+</head>
+<body>
+    <h1>Voice Translation</h1>
+    <p>Click the microphone icon and speak in any language:</p>
+    <button id="startButton">Start Recording</button>
+    <div id="output"></div>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const outputDiv = document.getElementById('output');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US'; // Set the default language to English
+
+        startButton.addEventListener('click', () => {
+            recognition.start();
+            startButton.textContent = 'Recording...';
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            outputDiv.textContent = `You said: ${transcript}`;
+            
+            // Translate the speech to a desired language using Google Cloud Translation API
+            translateText(transcript, 'es'); // Change 'es' to the desired language code
+        };
+
+        recognition.onend = () => {
+            startButton.textContent = 'Start Recording';
+        };
+
+        function translateText(text, targetLanguage) {
+            // Replace YOUR_TRANSLATION_API_KEY with your Google Cloud Translation API key
+            const apiKey = 'YOUR_TRANSLATION_API_KEY';
+            const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+
+            const data = {
+                q: text,
+                source: 'en',
+                target: targetLanguage,
+            };
+
+            fetch(apiUrl, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(result => {
+                const translatedText = result.data.translations[0].translatedText;
+                outputDiv.textContent += `\nTranslated: ${translatedText}`;
+            })
+            .catch(error => {
+                console.error('Translation error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
